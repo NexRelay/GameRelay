@@ -1,0 +1,268 @@
+<Window
+    x:Class="GameRelay.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="GameRelay">
+
+    <Grid Background="#0F1419">
+        <Grid.Resources>
+            <SolidColorBrush x:Key="AccentGreen" Color="#10B981" />
+            <SolidColorBrush x:Key="AccentGreenSoft" Color="#1A10B981" />
+            <SolidColorBrush x:Key="CardBg" Color="#161D26" />
+            <SolidColorBrush x:Key="CardBorder" Color="#232D38" />
+            <SolidColorBrush x:Key="TextMuted" Color="#8FA3B8" />
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ============ custom title bar ============ -->
+        <Grid x:Name="TitleBarArea" Grid.Row="0" Height="46" Padding="16,0,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Border Width="26" Height="26" CornerRadius="7" VerticalAlignment="Center">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#10B981" Offset="0" />
+                            <GradientStop Color="#0B7C55" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <FontIcon Glyph="&#xE968;" FontSize="14" Foreground="White" />
+                </Border>
+                <TextBlock Text="GameRelay" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center" />
+                <Border Background="{StaticResource AccentGreenSoft}"
+                        BorderBrush="#2E10B981" BorderThickness="1"
+                        CornerRadius="10" Padding="8,1.5" VerticalAlignment="Center">
+                    <TextBlock x:Name="VersionChip" Text="v1.1" FontSize="11"
+                               Foreground="{StaticResource AccentGreen}" FontWeight="SemiBold" />
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- ============ connection header ============ -->
+        <Border Grid.Row="1" Margin="20,8,20,4" Padding="18,14"
+                Background="{StaticResource CardBg}"
+                BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
+                CornerRadius="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- status pill -->
+                <Border Grid.Column="0" CornerRadius="15" Padding="13,6"
+                        Background="#0C1117" BorderBrush="{StaticResource CardBorder}"
+                        BorderThickness="1" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse x:Name="StatusDot" Width="9" Height="9" Fill="Gray" VerticalAlignment="Center" />
+                        <TextBlock x:Name="StatusText" Text="Disconnected" FontSize="13"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock x:Name="LatencyText" Text="" FontSize="13" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMuted}" />
+                    </StackPanel>
+                </Border>
+
+                <TextBlock x:Name="ServerText" Grid.Column="1" Margin="14,0,0,0"
+                           VerticalAlignment="Center" FontSize="12.5"
+                           Foreground="{StaticResource TextMuted}"
+                           TextTrimming="CharacterEllipsis" />
+
+                <Button x:Name="SetupButton" Grid.Column="2" Margin="0,0,8,0"
+                        Click="SetupButton_Click" BorderBrush="{StaticResource CardBorder}"
+                        AutomationProperties.AutomationId="SetupServerBtn"
+                        AutomationProperties.Name="Set up server">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE753;" FontSize="13" Foreground="{StaticResource AccentGreen}" />
+                        <TextBlock Text="Set up server" />
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="ConnectButton" Grid.Column="3" MinWidth="118" Margin="0,0,8,0"
+                        Style="{StaticResource AccentButtonStyle}" Click="ConnectButton_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon x:Name="ConnectIcon" Glyph="&#xE768;" FontSize="13" />
+                        <TextBlock x:Name="ConnectLabel" Text="Connect" />
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="4" Padding="9" Click="SettingsButton_Click"
+                        ToolTipService.ToolTip="Settings" Background="Transparent"
+                        BorderBrush="{StaticResource CardBorder}">
+                    <FontIcon Glyph="&#xE713;" FontSize="15" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ============ tunnels ============ -->
+        <Grid Grid.Row="2" Padding="20,14,20,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="4,0,0,12">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="Tunnels" FontSize="16" FontWeight="SemiBold" />
+                    <Border x:Name="TunnelCountBadge" Background="#0C1117"
+                            BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
+                            CornerRadius="9" Padding="8,1" VerticalAlignment="Center" Visibility="Collapsed">
+                        <TextBlock x:Name="TunnelCountText" Text="0" FontSize="11.5"
+                                   Foreground="{StaticResource TextMuted}" />
+                    </Border>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <Button Click="ScanGamesButton_Click" BorderBrush="{StaticResource CardBorder}"
+                            ToolTipService.ToolTip="Detect game servers running on this PC">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE721;" FontSize="13" />
+                            <TextBlock Text="Scan for games" />
+                        </StackPanel>
+                    </Button>
+                    <Button Click="AddTunnelButton_Click" BorderBrush="{StaticResource CardBorder}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE710;" FontSize="13" Foreground="{StaticResource AccentGreen}" />
+                            <TextBlock Text="Add tunnel" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- empty state -->
+            <StackPanel x:Name="EmptyHint" Grid.Row="1" Spacing="14"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border Width="84" Height="84" CornerRadius="42" HorizontalAlignment="Center"
+                        Background="{StaticResource AccentGreenSoft}"
+                        BorderBrush="#2E10B981" BorderThickness="1">
+                    <FontIcon Glyph="&#xE968;" FontSize="36" Foreground="{StaticResource AccentGreen}" />
+                </Border>
+                <TextBlock x:Name="EmptyTitle" Text="No tunnels yet" FontSize="17" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" />
+                <TextBlock x:Name="EmptySubtitle" Text="Expose your first game server to the internet in a few clicks."
+                           Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"
+                           TextAlignment="Center" MaxWidth="380" TextWrapping="Wrap" />
+                <Button x:Name="EmptySetupButton" HorizontalAlignment="Center" Margin="0,6,0,0"
+                        Style="{StaticResource AccentButtonStyle}" Click="SetupButton_Click"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE753;" FontSize="13" />
+                        <TextBlock Text="Set up my server" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="EmptyAddButton" HorizontalAlignment="Center" Margin="0,6,0,0"
+                        Style="{StaticResource AccentButtonStyle}" Click="AddTunnelButton_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE710;" FontSize="13" />
+                        <TextBlock Text="Add your first tunnel" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <ListView x:Name="TunnelList" Grid.Row="1"
+                      SelectionMode="None" IsItemClickEnabled="False">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,0,0,10" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="16,14"
+                                Background="{StaticResource CardBg}"
+                                BorderBrush="{StaticResource CardBorder}"
+                                BorderThickness="1" CornerRadius="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" MinWidth="50" Padding="0,5"
+                                        Background="{Binding ProtoBrush}"
+                                        CornerRadius="7" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ProtoBadge}" FontSize="11.5" FontWeight="Bold"
+                                               Foreground="#06251A" HorizontalAlignment="Center" />
+                                </Border>
+
+                                <StackPanel Grid.Column="1" Margin="15,0,0,0" Spacing="3" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14.5" />
+                                    <TextBlock Text="{Binding PortsText}" FontSize="12"
+                                               Foreground="{StaticResource TextMuted}" />
+                                    <TextBlock Text="{Binding TrafficText}" FontSize="12"
+                                               Foreground="#5F7488" />
+                                </StackPanel>
+
+                                <Border Grid.Column="2" CornerRadius="12" Padding="10,4" Margin="12,0"
+                                        Background="#0C1117" BorderBrush="{StaticResource CardBorder}"
+                                        BorderThickness="1" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                                 Fill="{Binding StatusBrush}" />
+                                        <TextBlock Text="{Binding StatusText}" FontSize="11.5"
+                                                   VerticalAlignment="Center" MaxWidth="190"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{StaticResource TextMuted}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <ToggleSwitch Grid.Column="3" IsOn="{Binding Enabled, Mode=TwoWay}"
+                                              OnContent="" OffContent="" MinWidth="0"
+                                              Margin="4,0" VerticalAlignment="Center" />
+
+                                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6"
+                                            VerticalAlignment="Center">
+                                    <Button Click="ShareTunnel_Click" Tag="{Binding Id}"
+                                            ToolTipService.ToolTip="Copy the address players use" Padding="8"
+                                            Background="Transparent" BorderBrush="{StaticResource CardBorder}">
+                                        <FontIcon Glyph="&#xE72D;" FontSize="13" Foreground="{StaticResource AccentGreen}" />
+                                    </Button>
+                                    <Button Click="EditTunnel_Click" Tag="{Binding Id}"
+                                            ToolTipService.ToolTip="Edit" Padding="8"
+                                            Background="Transparent" BorderBrush="{StaticResource CardBorder}">
+                                        <FontIcon Glyph="&#xE70F;" FontSize="13" />
+                                    </Button>
+                                    <Button Click="DeleteTunnel_Click" Tag="{Binding Id}"
+                                            ToolTipService.ToolTip="Delete" Padding="8"
+                                            Background="Transparent" BorderBrush="{StaticResource CardBorder}">
+                                        <FontIcon Glyph="&#xE74D;" FontSize="13" Foreground="#E58B8B" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+
+        <!-- ============ log panel ============ -->
+        <Expander Grid.Row="3" HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch"
+                  Padding="0" Margin="20,8,20,14"
+                  Background="{StaticResource CardBg}"
+                  BorderBrush="{StaticResource CardBorder}"
+                  ExpandDirection="Up" CornerRadius="10">
+            <Expander.Header>
+                <StackPanel Orientation="Horizontal" Spacing="9">
+                    <FontIcon Glyph="&#xE7C3;" FontSize="13" Foreground="{StaticResource TextMuted}" />
+                    <TextBlock Text="Activity log" FontSize="13" />
+                </StackPanel>
+            </Expander.Header>
+            <ScrollViewer x:Name="LogScroll" MaxHeight="190" Padding="6">
+                <TextBlock x:Name="LogText" FontFamily="Consolas" FontSize="12"
+                           TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                           Foreground="{StaticResource TextMuted}" />
+            </ScrollViewer>
+        </Expander>
+    </Grid>
+</Window>

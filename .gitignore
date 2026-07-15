@@ -1,0 +1,27 @@
+# ---- build output ----
+bin/
+obj/
+publish/
+dist/
+*.user
+
+# staged relay-server binaries (produced by scripts/build-server.ps1,
+# copied into the app by scripts/build-client.ps1)
+client/GameRelay.App/ServerAssets/
+
+# compiled Go binaries
+server/gamerelay-server
+server/*.exe
+
+# ---- local / secrets ----
+# never commit a real relay config or SSH keys
+config.json
+*.key
+*.pem
+
+# ---- junk ----
+*.log
+*.bad
+*.tmp
+.vs/
+.idea/

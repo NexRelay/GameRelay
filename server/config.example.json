@@ -1,0 +1,10 @@
+{
+  "listen_addr": "0.0.0.0",
+  "control_port": 7000,
+  "udp_port": 7000,
+  "secret": "change-me",
+  "allowed_ports": [
+    { "from": 1024, "to": 65535 }
+  ],
+  "log_level": "info"
+}

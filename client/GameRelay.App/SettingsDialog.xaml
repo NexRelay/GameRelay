@@ -1,0 +1,25 @@
+<ContentDialog
+    x:Class="GameRelay.App.SettingsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Settings"
+    PrimaryButtonText="Save"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary">
+
+    <StackPanel Spacing="14" MinWidth="380">
+        <TextBox x:Name="HostBox" Header="Relay server address"
+                 PlaceholderText="vps.example.com or 140.10.20.30" />
+
+        <NumberBox x:Name="PortBox" Header="Control port"
+                   SpinButtonPlacementMode="Inline" Minimum="1" Maximum="65535" Value="7000" />
+
+        <PasswordBox x:Name="SecretBox" Header="Shared secret"
+                     PlaceholderText="the same secret as in the server config" />
+
+        <ToggleSwitch x:Name="AutoConnectToggle" Header="Connect automatically on startup"
+                      OnContent="Yes" OffContent="No" IsOn="True" />
+
+        <InfoBar x:Name="ValidationBar" IsOpen="False" IsClosable="False" Severity="Error" />
+    </StackPanel>
+</ContentDialog>

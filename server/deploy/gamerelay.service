@@ -1,0 +1,22 @@
+[Unit]
+Description=GameRelay tunnel server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gamerelay
+Group=gamerelay
+ExecStart=/opt/gamerelay/gamerelay-server -config /opt/gamerelay/config.json
+Restart=always
+RestartSec=3
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/gamerelay
+
+[Install]
+WantedBy=multi-user.target

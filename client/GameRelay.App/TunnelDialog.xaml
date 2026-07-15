@@ -1,0 +1,42 @@
+<ContentDialog
+    x:Class="GameRelay.App.TunnelDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Add tunnel"
+    PrimaryButtonText="Add"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary">
+
+    <StackPanel Spacing="14" MinWidth="380">
+
+        <ComboBox x:Name="PresetBox" Header="Game preset"
+                  HorizontalAlignment="Stretch"
+                  SelectionChanged="PresetBox_SelectionChanged" />
+
+        <TextBox x:Name="NameBox" Header="Name" PlaceholderText="My Minecraft server" />
+
+        <ComboBox x:Name="ProtocolBox" Header="Protocol" HorizontalAlignment="Stretch">
+            <ComboBoxItem Content="TCP" Tag="tcp" IsSelected="True" />
+            <ComboBoxItem Content="UDP" Tag="udp" />
+        </ComboBox>
+
+        <NumberBox x:Name="PublicPortBox" Header="Public port (on the VPS)"
+                   SpinButtonPlacementMode="Inline" Minimum="1" Maximum="65535" Value="25565" />
+
+        <Grid ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="LocalHostBox" Grid.Column="0" Header="Local address" Text="127.0.0.1" />
+            <NumberBox x:Name="LocalPortBox" Grid.Column="1" Header="Local port"
+                       SpinButtonPlacementMode="Inline" Minimum="1" Maximum="65535" Value="25565" />
+        </Grid>
+
+        <InfoBar x:Name="ExtraPortsInfo" IsOpen="False" IsClosable="False"
+                 Severity="Informational" />
+
+        <InfoBar x:Name="ValidationBar" IsOpen="False" IsClosable="False"
+                 Severity="Error" />
+    </StackPanel>
+</ContentDialog>
