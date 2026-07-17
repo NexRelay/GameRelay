@@ -6,6 +6,37 @@ using System.Net;
 using System.Net.Sockets;
 using GameRelay.Core;
 
+if (args.Length == 1 && args[0] == "oci")
+{
+    // Print the generated Cloud Shell script so we can validate it externally.
+    Console.Write(OciCommand.BuildSecurityListScript());
+    return 0;
+}
+
+if (args.Length >= 1 && args[0] == "update")
+{
+    // Pretend we're an old version so a real release counts as "newer".
+    var cur = args.Length > 1 ? Version.Parse(args[1]) : new Version(1, 0, 0);
+    var info = await UpdateChecker.CheckAsync(cur, CancellationToken.None);
+    if (info is null) { Console.WriteLine($"no update newer than {cur}"); return 0; }
+    Console.WriteLine($"UPDATE: {info.Version} (tag {info.Tag}) -> {info.HtmlUrl}");
+    return 0;
+}
+
+if (args.Length >= 3 && args[0] == "testport")
+{
+    var r = await ConnectivityTester.TestPortAsync(args[1], int.Parse(args[2]), TimeSpan.FromSeconds(8));
+    Console.WriteLine($"{(r.Ok ? "OK" : "FAIL")}: {r.Message}");
+    return r.Ok ? 0 : 1;
+}
+
+if (args.Length >= 4 && args[0] == "testrelay")
+{
+    var r = await ConnectivityTester.TestRelayAsync(args[1], int.Parse(args[2]), args[3], TimeSpan.FromSeconds(8));
+    Console.WriteLine($"{(r.Ok ? "OK" : "FAIL")}: {r.Message}");
+    return r.Ok ? 0 : 1;
+}
+
 if (args.Length == 1 && args[0] == "detect")
 {
     // Mimic a real Minecraft server on a NON-default port bound to all

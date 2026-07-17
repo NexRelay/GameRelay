@@ -80,6 +80,32 @@ public sealed partial class MainWindow : Window
             StartClient();
         else if (!IsConfigValid())
             AppendLog("configure the server address and secret in Settings to begin");
+
+        _ = CheckForUpdatesAsync();
+    }
+
+    // ------------------------------------------------------------ updates
+
+    private string? _updateUrl;
+
+    private async Task CheckForUpdatesAsync()
+    {
+        var current = typeof(MainWindow).Assembly.GetName().Version ?? new Version(0, 0);
+        var info = await UpdateChecker.CheckAsync(current);
+        if (info is null) return;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _updateUrl = info.HtmlUrl;
+            UpdateBar.Message = $"GameRelay {info.Version} is available (you have v{current.Major}.{current.Minor}).";
+            UpdateBar.IsOpen = true;
+            AppendLog($"update available: v{info.Version} — {info.HtmlUrl}");
+        });
+    }
+
+    private async void UpdateDownload_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_updateUrl))
+            await Windows.System.Launcher.LaunchUriAsync(new Uri(_updateUrl));
     }
 
     private bool IsConfigValid() =>

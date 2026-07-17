@@ -20,8 +20,9 @@ $assets = Join-Path $root "client\GameRelay.App\ServerAssets"
 $dist = Join-Path $root "dist"
 $deploy = Join-Path $root "server\deploy"
 $needed = @("gamerelay-server-linux-amd64", "gamerelay-server-linux-arm64")
-if ($needed | Where-Object { -not (Test-Path (Join-Path $dist $_)) }) {
-    throw "server binaries missing in dist\ — run scripts\build-server.ps1 first"
+$absent = $needed | Where-Object { -not (Test-Path (Join-Path $dist $_)) }
+if ($absent) {
+    throw "server binaries missing in dist. Run scripts\build-server.ps1 first."
 }
 New-Item -ItemType Directory -Force $assets | Out-Null
 foreach ($f in $needed) { Copy-Item (Join-Path $dist $f) $assets -Force }

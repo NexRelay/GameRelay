@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+PackageIdentifier: NexRelay.GameRelay
+PackageVersion: 1.4.0
+InstallerType: zip
+NestedInstallerType: portable
+NestedInstallerFiles:
+  - RelativeFilePath: GameRelay-Windows\GameRelay.exe
+    PortableCommandAlias: gamerelay
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/NexRelay/GameRelay/releases/download/v1.4.0/GameRelay-Windows-x64-v1.4.zip
+    InstallerSha256: 27B4324B59B3F46C38080857D4FFA8AEE9C0417866A47C84F04756C679F2C7E2
+ManifestType: installer
+ManifestVersion: 1.6.0

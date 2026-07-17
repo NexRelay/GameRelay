@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+PackageIdentifier: NexRelay.GameRelay
+PackageVersion: 1.4.0
+PackageLocale: en-US
+Publisher: NexRelay
+PublisherUrl: https://github.com/NexRelay
+PublisherSupportUrl: https://github.com/NexRelay/GameRelay/issues
+PackageName: GameRelay
+PackageUrl: https://github.com/NexRelay/GameRelay
+License: MIT
+LicenseUrl: https://github.com/NexRelay/GameRelay/blob/main/LICENSE
+ShortDescription: Host game servers from home without port forwarding.
+Description: >-
+  GameRelay is a lightweight, self-hosted, open-source relay that exposes game
+  servers running on your PC to the internet through a tiny relay you run on a
+  cloud VPS. No port forwarding, no accounts, no subscriptions. Supports
+  Minecraft, Palworld, Terraria, FiveM, Rust, Valheim and any TCP/UDP service.
+Moniker: gamerelay
+Tags:
+  - game-server
+  - tunnel
+  - port-forwarding
+  - minecraft
+  - self-hosted
+  - relay
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

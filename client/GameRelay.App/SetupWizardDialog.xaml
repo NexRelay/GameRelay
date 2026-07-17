@@ -8,8 +8,8 @@
     DefaultButton="Primary"
     IsPrimaryButtonEnabled="False">
 
-    <ScrollViewer MaxHeight="560" Padding="2,0,10,0">
-        <StackPanel Spacing="14" MinWidth="440">
+    <ScrollViewer MaxHeight="600" Padding="2,0,10,0">
+        <StackPanel Spacing="14" MinWidth="460">
 
             <!-- prerequisites -->
             <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
@@ -51,6 +51,9 @@
                         Padding="16" CornerRadius="10"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+
+                <TextBlock Text="Step 1 · Server details" FontWeight="SemiBold"
+                           Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                 <TextBox x:Name="AutoHostBox" Header="Server public IP address"
                          PlaceholderText="140.10.20.30" TextChanged="AnyAuto_Changed" />
                 <TextBox x:Name="AutoUserBox" Header="SSH username" Text="ubuntu" TextChanged="AnyAuto_Changed" />
@@ -64,8 +67,25 @@
                     <Button x:Name="BrowseKeyButton" Grid.Column="1" Content="Browse…"
                             VerticalAlignment="Bottom" Click="BrowseKey_Click" />
                 </Grid>
+
+                <!-- test SSH reachability before installing -->
+                <Button x:Name="TestSshButton" Click="TestSsh_Click" IsEnabled="False"
+                        AutomationProperties.AutomationId="TestSshBtn"
+                        AutomationProperties.Name="Test the server is reachable (SSH)">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ProgressRing x:Name="TestSshSpinner" Width="15" Height="15" IsActive="False" Visibility="Collapsed" />
+                        <FontIcon x:Name="TestSshIcon" Glyph="&#xE9D9;" FontSize="13" />
+                        <TextBlock Text="Test the server is reachable (SSH)" />
+                    </StackPanel>
+                </Button>
+                <InfoBar x:Name="TestSshResult" IsOpen="False" IsClosable="False" />
+
+                <TextBlock Text="Step 2 · Install" FontWeight="SemiBold" Margin="0,4,0,0"
+                           Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                 <Button x:Name="ProvisionButton" Style="{StaticResource AccentButtonStyle}"
-                        Click="Provision_Click" IsEnabled="False">
+                        Click="Provision_Click" IsEnabled="False"
+                        AutomationProperties.AutomationId="ProvisionBtn"
+                        AutomationProperties.Name="Install relay on server">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <ProgressRing x:Name="ProvisionSpinner" Width="16" Height="16"
                                       IsActive="False" Visibility="Collapsed" />
@@ -113,23 +133,47 @@
                          TextChanged="AnyManual_Changed" />
             </StackPanel>
 
-            <!-- ===================== SECURITY LIST (always) ===================== -->
+            <!-- ===================== SECURITY LIST + Cloud Shell command ===================== -->
             <Expander x:Name="FirewallExpander" HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Stretch" IsExpanded="True">
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon Glyph="&#xE785;" FontSize="14" />
-                        <TextBlock Text="Required: open the firewall in the Oracle console" FontWeight="SemiBold" />
+                        <TextBlock Text="Required: open the cloud firewall (Security List)" FontWeight="SemiBold" />
                     </StackPanel>
                 </Expander.Header>
-                <StackPanel Spacing="8" Padding="0,4,0,4">
+                <StackPanel Spacing="10" Padding="0,4,0,4">
                     <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                        The app can't do this part — it lives in Oracle's cloud console, not on the server.
-                        Do it once:
+                        This one firewall lives in Oracle's cloud console, not on the server — the app can't
+                        reach it over SSH. Two ways to do it:
                     </TextBlock>
-                    <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+
+                    <TextBlock Text="Option A · One command in Cloud Shell (fastest)" FontWeight="SemiBold" FontSize="13" />
+                    <TextBlock TextWrapping="Wrap" FontSize="12.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                        Open Cloud Shell (the &gt;_ icon at the top-right of the Oracle console), then paste this
+                        and press Enter. It opens the ports on your VCN automatically.
+                    </TextBlock>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="#0A0E13" CornerRadius="8" Padding="10" MaxHeight="150">
+                            <ScrollViewer>
+                                <TextBlock x:Name="OciCmd" FontFamily="Consolas" FontSize="11"
+                                           TextWrapping="Wrap" IsTextSelectionEnabled="True" Foreground="#7EE2B8" />
+                            </ScrollViewer>
+                        </Border>
+                        <Button Grid.Column="1" VerticalAlignment="Top" Click="CopyOci_Click"
+                                ToolTipService.ToolTip="Copy the Cloud Shell command">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                        </Button>
+                    </Grid>
+
+                    <TextBlock Text="Option B · Manually in the console" FontWeight="SemiBold" FontSize="13" Margin="0,4,0,0" />
+                    <TextBlock TextWrapping="Wrap" FontSize="12.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
                         ☰ → Networking → Virtual Cloud Networks → your VCN → Security Lists →
-                        Default Security List → Add Ingress Rules. Add these two (Source CIDR 0.0.0.0/0):
+                        Default Security List → Add Ingress Rules (Source CIDR 0.0.0.0/0):
                     </TextBlock>
                     <Border Background="#0A0E13" CornerRadius="8" Padding="10">
                         <TextBlock FontFamily="Consolas" FontSize="12" Foreground="#7EE2B8">
@@ -137,10 +181,18 @@
                             Rule 2 — IP Protocol: UDP,  Destination Port Range: 1024-65535
                         </TextBlock>
                     </Border>
-                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}">
-                        Opening the whole range is safe: only the relay listens, and ports with no active
-                        tunnel have nothing behind them.
-                    </TextBlock>
+
+                    <!-- verify the firewall actually opened -->
+                    <Button x:Name="TestPortsButton" Click="TestPorts_Click" IsEnabled="False" Margin="0,4,0,0"
+                            AutomationProperties.AutomationId="TestPortsBtn"
+                            AutomationProperties.Name="Test the connection end-to-end">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ProgressRing x:Name="TestPortsSpinner" Width="15" Height="15" IsActive="False" Visibility="Collapsed" />
+                            <FontIcon x:Name="TestPortsIcon" Glyph="&#xE9D9;" FontSize="13" />
+                            <TextBlock Text="Test the connection end-to-end" />
+                        </StackPanel>
+                    </Button>
+                    <InfoBar x:Name="TestPortsResult" IsOpen="False" IsClosable="False" />
                 </StackPanel>
             </Expander>
 

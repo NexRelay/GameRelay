@@ -7,9 +7,11 @@ using WinRT.Interop;
 namespace GameRelay.App;
 
 /// <summary>
-/// First-time server setup: an automatic SSH path (the app installs the relay)
-/// and a manual path (the user runs the commands). Both end by saving the
-/// server address + secret. Returns the resulting values on "Save &amp; connect".
+/// First-time server setup with verifiable, testable stages: an automatic SSH
+/// path (the app installs the relay) and a manual path. Per-step "Test" buttons
+/// check SSH reachability and the end-to-end relay connection, and a generated
+/// Oracle Cloud Shell command opens the cloud firewall. Returns host + secret on
+/// "Save &amp; connect".
 /// </summary>
 public sealed partial class SetupWizardDialog : ContentDialog
 {
@@ -17,7 +19,6 @@ public sealed partial class SetupWizardDialog : ContentDialog
     private bool _provisioned;
     private int _resultPort = 7000;
 
-    /// <summary>Set when the user confirms; consumed by the caller.</summary>
     public string? ResultHost { get; private set; }
     public string? ResultSecret { get; private set; }
     public int ResultPort => _resultPort;
@@ -26,10 +27,9 @@ public sealed partial class SetupWizardDialog : ContentDialog
     {
         _hwnd = hwnd;
         InitializeComponent();
-        // Set the default mode after the panels exist — doing it in XAML fires
-        // Checked during parse, before AutoPanel/ManualPanel are created.
         AutoRadio.IsChecked = true;
         UpdateManualCommand();
+        OciCmd.Text = OciCommand.BuildSecurityListScript();
         PrimaryButtonClick += OnPrimary;
     }
 
@@ -38,19 +38,15 @@ public sealed partial class SetupWizardDialog : ContentDialog
         bool auto = AutoRadio.IsChecked == true;
         AutoPanel.Visibility = auto ? Visibility.Visible : Visibility.Collapsed;
         ManualPanel.Visibility = auto ? Visibility.Collapsed : Visibility.Visible;
-        RefreshPrimaryEnabled();
+        RefreshEnabled();
     }
 
     // ---------------------------------------------------------- automatic
 
     private void AnyAuto_Changed(object sender, TextChangedEventArgs e)
     {
-        ProvisionButton.IsEnabled =
-            !string.IsNullOrWhiteSpace(AutoHostBox.Text) &&
-            !string.IsNullOrWhiteSpace(AutoUserBox.Text) &&
-            !string.IsNullOrWhiteSpace(AutoKeyBox.Text);
         UpdateManualCommand();
-        RefreshPrimaryEnabled();
+        RefreshEnabled();
     }
 
     private async void BrowseKey_Click(object sender, RoutedEventArgs e)
@@ -65,8 +61,19 @@ public sealed partial class SetupWizardDialog : ContentDialog
         if (file is not null)
         {
             AutoKeyBox.Text = file.Path;
-            AnyAuto_Changed(sender, null!);
+            RefreshEnabled();
         }
+    }
+
+    private async void TestSsh_Click(object sender, RoutedEventArgs e)
+    {
+        SetBusy(TestSshButton, TestSshSpinner, TestSshIcon, true);
+        TestSshResult.IsOpen = false;
+        var r = await ConnectivityTester.TestPortAsync(
+            AutoHostBox.Text.Trim(), 22, TimeSpan.FromSeconds(8));
+        SetBusy(TestSshButton, TestSshSpinner, TestSshIcon, false);
+        Show(TestSshResult, r.Ok ? InfoBarSeverity.Success : InfoBarSeverity.Error,
+            r.Ok ? "The server is reachable — go ahead and install." : r.Message);
     }
 
     private async void Provision_Click(object sender, RoutedEventArgs e)
@@ -75,11 +82,13 @@ public sealed partial class SetupWizardDialog : ContentDialog
         var missing = ServerProvisioner.MissingAssets(assetsDir);
         if (missing.Count > 0)
         {
-            ShowAutoResult(InfoBarSeverity.Error, $"bundled server files are missing: {string.Join(", ", missing)}");
+            Show(AutoResult, InfoBarSeverity.Error, $"bundled server files are missing: {string.Join(", ", missing)}");
             return;
         }
 
-        SetProvisioning(true);
+        SetBusy(ProvisionButton, ProvisionSpinner, ProvisionIcon, true);
+        ProvisionLabel.Text = "Installing…";
+        IsSecondaryButtonEnabled = false;
         LogText.Text = "";
         LogBorder.Visibility = Visibility.Visible;
         AutoResult.IsOpen = false;
@@ -95,38 +104,24 @@ public sealed partial class SetupWizardDialog : ContentDialog
             AutoHostBox.Text.Trim(), AutoUserBox.Text.Trim(), AutoKeyBox.Text.Trim(),
             assetsDir, 7000, Log, CancellationToken.None);
 
-        SetProvisioning(false);
+        SetBusy(ProvisionButton, ProvisionSpinner, ProvisionIcon, false);
+        ProvisionLabel.Text = "Install relay on server";
+        IsSecondaryButtonEnabled = true;
+
         if (result.Success)
         {
             _provisioned = true;
             _resultPort = result.ControlPort;
             ResultHost = AutoHostBox.Text.Trim();
             ResultSecret = result.Secret;
-            ShowAutoResult(InfoBarSeverity.Success,
-                "Server installed and running. Click \"Save & connect\" — don't forget the firewall step below.");
+            Show(AutoResult, InfoBarSeverity.Success,
+                "Server installed and running. Now open the cloud firewall below, then Test the connection.");
         }
         else
         {
-            ShowAutoResult(InfoBarSeverity.Error, $"Setup failed: {result.Error}");
+            Show(AutoResult, InfoBarSeverity.Error, $"Setup failed: {result.Error}");
         }
-        RefreshPrimaryEnabled();
-    }
-
-    private void SetProvisioning(bool busy)
-    {
-        ProvisionButton.IsEnabled = !busy;
-        ProvisionSpinner.IsActive = busy;
-        ProvisionSpinner.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-        ProvisionIcon.Visibility = busy ? Visibility.Collapsed : Visibility.Visible;
-        ProvisionLabel.Text = busy ? "Installing…" : "Install relay on server";
-        IsSecondaryButtonEnabled = !busy;
-    }
-
-    private void ShowAutoResult(InfoBarSeverity sev, string msg)
-    {
-        AutoResult.Severity = sev;
-        AutoResult.Message = msg;
-        AutoResult.IsOpen = true;
+        RefreshEnabled();
     }
 
     // ------------------------------------------------------------- manual
@@ -134,7 +129,7 @@ public sealed partial class SetupWizardDialog : ContentDialog
     private void AnyManual_Changed(object sender, TextChangedEventArgs e)
     {
         UpdateManualCommand();
-        RefreshPrimaryEnabled();
+        RefreshEnabled();
     }
 
     private void UpdateManualCommand()
@@ -147,21 +142,76 @@ public sealed partial class SetupWizardDialog : ContentDialog
             $"ssh -i \"path\\to\\your-key.key\" ubuntu@{host} \"cd ~/gamerelay && sudo bash install.sh\"";
     }
 
-    private void CopyManualCmd_Click(object sender, RoutedEventArgs e)
+    private void CopyManualCmd_Click(object sender, RoutedEventArgs e) => Copy(ManualCmd.Text);
+    private void CopyOci_Click(object sender, RoutedEventArgs e) => Copy(OciCmd.Text);
+
+    private static void Copy(string text)
     {
         var dp = new DataPackage();
-        dp.SetText(ManualCmd.Text);
+        dp.SetText(text);
         Clipboard.SetContent(dp);
     }
 
-    // ------------------------------------------------------------ confirm
+    // ------------------------------------------------------ end-to-end test
 
-    private void RefreshPrimaryEnabled()
+    private (string host, int port, string secret)? EffectiveTarget()
     {
+        if (AutoRadio.IsChecked == true && _provisioned && ResultHost is not null && ResultSecret is not null)
+            return (ResultHost, _resultPort, ResultSecret);
+        if (ManualRadio.IsChecked == true)
+        {
+            string h = ManualHostBox.Text.Trim();
+            string s = ManualSecretBox.Text.Trim();
+            if (h.Length > 0 && s.Length >= 16) return (h, 7000, s);
+        }
+        return null;
+    }
+
+    private async void TestPorts_Click(object sender, RoutedEventArgs e)
+    {
+        var t = EffectiveTarget();
+        if (t is null) return;
+        SetBusy(TestPortsButton, TestPortsSpinner, TestPortsIcon, true);
+        TestPortsResult.IsOpen = false;
+        var r = await ConnectivityTester.TestRelayAsync(
+            t.Value.host, t.Value.port, t.Value.secret, TimeSpan.FromSeconds(10));
+        SetBusy(TestPortsButton, TestPortsSpinner, TestPortsIcon, false);
+        Show(TestPortsResult, r.Ok ? InfoBarSeverity.Success : InfoBarSeverity.Error,
+            r.Ok ? "All good — the relay is reachable and the secret is correct. Click \"Save & connect\"."
+                 : r.Message);
+    }
+
+    // ------------------------------------------------------------ helpers
+
+    private static void SetBusy(Button btn, ProgressRing ring, FontIcon icon, bool busy)
+    {
+        btn.IsEnabled = !busy;
+        ring.IsActive = busy;
+        ring.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        icon.Visibility = busy ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private static void Show(InfoBar bar, InfoBarSeverity sev, string msg)
+    {
+        bar.Severity = sev;
+        bar.Message = msg;
+        bar.IsOpen = true;
+    }
+
+    private void RefreshEnabled()
+    {
+        bool haveAutoDetails =
+            !string.IsNullOrWhiteSpace(AutoHostBox.Text) &&
+            !string.IsNullOrWhiteSpace(AutoUserBox.Text) &&
+            !string.IsNullOrWhiteSpace(AutoKeyBox.Text);
+
+        TestSshButton.IsEnabled = !string.IsNullOrWhiteSpace(AutoHostBox.Text);
+        ProvisionButton.IsEnabled = haveAutoDetails;
+        TestPortsButton.IsEnabled = EffectiveTarget() is not null;
+
         IsPrimaryButtonEnabled = AutoRadio.IsChecked == true
             ? _provisioned
-            : !string.IsNullOrWhiteSpace(ManualHostBox.Text) &&
-              ManualSecretBox.Text.Trim().Length >= 16;
+            : !string.IsNullOrWhiteSpace(ManualHostBox.Text) && ManualSecretBox.Text.Trim().Length >= 16;
     }
 
     private void OnPrimary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -172,6 +222,5 @@ public sealed partial class SetupWizardDialog : ContentDialog
             ResultSecret = ManualSecretBox.Text.Trim();
             _resultPort = 7000;
         }
-        // Automatic path already set ResultHost/ResultSecret during provisioning.
     }
 }

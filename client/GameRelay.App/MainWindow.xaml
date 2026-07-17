@@ -16,6 +16,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -42,8 +43,17 @@
             </StackPanel>
         </Grid>
 
+        <!-- ============ update banner ============ -->
+        <InfoBar x:Name="UpdateBar" Grid.Row="1" Margin="20,4,20,0"
+                 IsOpen="False" IsClosable="True" Severity="Success"
+                 Title="Update available">
+            <InfoBar.ActionButton>
+                <Button x:Name="UpdateDownloadButton" Content="Download" Click="UpdateDownload_Click" />
+            </InfoBar.ActionButton>
+        </InfoBar>
+
         <!-- ============ connection header ============ -->
-        <Border Grid.Row="1" Margin="20,8,20,4" Padding="18,14"
+        <Border Grid.Row="2" Margin="20,8,20,4" Padding="18,14"
                 Background="{StaticResource CardBg}"
                 BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
                 CornerRadius="12">
@@ -101,7 +111,7 @@
         </Border>
 
         <!-- ============ tunnels ============ -->
-        <Grid Grid.Row="2" Padding="20,14,20,0">
+        <Grid Grid.Row="3" Padding="20,14,20,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -246,7 +256,7 @@
         </Grid>
 
         <!-- ============ log panel ============ -->
-        <Expander Grid.Row="3" HorizontalAlignment="Stretch"
+        <Expander Grid.Row="4" HorizontalAlignment="Stretch"
                   HorizontalContentAlignment="Stretch"
                   Padding="0" Margin="20,8,20,14"
                   Background="{StaticResource CardBg}"
