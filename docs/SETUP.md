@@ -2,6 +2,14 @@
 
 This walks through a complete first-time deployment. Time: ~15 minutes.
 
+> **Fastest way (v1.4+):** the Windows app can do all of section 1 for you.
+> Open GameRelay → **Set up server** → **Automatic**, enter the VPS IP and your
+> SSH key, and click **Install relay on server**. Per-step **Test** buttons
+> verify SSH reachability, the relay connection and the secret, and the wizard
+> generates a paste-ready **Oracle Cloud Shell** command for the firewall in
+> section 2. The manual steps below are for Linux/other clients or if you prefer
+> the command line.
+
 ## 1. VPS: install the relay server
 
 Works on any Linux VPS; the steps below assume Ubuntu on Oracle Cloud

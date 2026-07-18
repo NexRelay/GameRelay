@@ -80,15 +80,16 @@ You need a Linux VPS — the **Oracle Cloud Always Free tier works and costs $0
 forever**. The full walkthrough (creating the VM, the network, and the firewall)
 is in **[docs/SETUP.md](docs/SETUP.md)**.
 
-### Easiest: let the Windows app do it (v1.3)
+### Easiest: let the Windows app do it (recommended)
 
 1. Build or grab the Windows app and run it.
 2. Click **Set up server**, choose **Automatic**, enter the VPS IP and browse to
-   your SSH key. The app installs the relay, opens the host firewall and fills in
-   the secret for you.
-3. Open the cloud provider's firewall (the one part that can't be automated —
-   the wizard shows the exact rules), then **Add tunnel** / **Scan for games**.
-   Players join `your-vps-ip:port`.
+   your SSH key. Use the per-step **Test** buttons to verify each stage as you go.
+   The app installs the relay, opens the host firewall and fills in the secret for
+   you.
+3. Open the cloud provider's firewall — the wizard generates a ready-to-paste
+   Oracle Cloud Shell command that does it in one step, or shows the manual rules.
+   Then **Add tunnel** / **Scan for games**. Players join `your-vps-ip:port`.
 
 ### Manual (any platform)
 
